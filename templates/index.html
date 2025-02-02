@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Translation App</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            font-size: 22px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            background: #f9f9f9;
+            resize: none;
+        }
+        #speakButton {
+            display: none;
+            background: #28a745;
+        }
+        #speakButton:hover {
+            background: #218838;
+        }
+        #fileName {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Healthcare Translation App</h1>
+        <form id="translationForm">
+            <label for="audio">Upload Audio:</label>
+            <input type="file" id="audio" name="audio" accept=".wav, .mp3" required>
+            <span id="fileName"></span>
+            
+            <label for="input_language">Input Language:</label>
+            <select id="input_language" name="input_language">
+                <option value="es">Spanish</option>
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh-cn">Chinese</option>
+            </select>
+
+            <label for="target_language">Translate to:</label>
+            <select id="target_language" name="target_language">
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh-cn">Chinese</option>
+            </select>
+
+            <button type="submit">Translate</button>
+        </form>
+
+        <h2>Original Text</h2>
+        <textarea id="originalText" readonly></textarea>
+        <h2>Translated Text</h2>
+        <textarea id="translatedText" readonly></textarea>
+        <button id="speakButton">🔊 Speak</button>
+    </div>
+
+    <script>
+        document.getElementById("translationForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append("audio", document.getElementById("audio").files[0]);
+            formData.append("input_language", document.getElementById("input_language").value);
+            formData.append("target_language", document.getElementById("target_language").value);
+
+            const response = await fetch("/translate", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            document.getElementById("originalText").value = data.original_text;
+            document.getElementById("translatedText").value = data.translated_text;
+
+            // Show the "Speak" button and update audio
+            const speakButton = document.getElementById("speakButton");
+            speakButton.style.display = "block";
+            speakButton.onclick = () => {
+                const audio = new Audio(data.audio_url + "?t=" + new Date().getTime());
+                audio.play();
+            };
+        });
+
+        // Reset UI when a new file is selected
+        document.getElementById("audio").addEventListener("change", function() {
+            document.getElementById("originalText").value = "";
+            document.getElementById("translatedText").value = "";
+            document.getElementById("speakButton").style.display = "none";
+            
+            const fileName = this.files[0] ? this.files[0].name : "No file chosen";
+            document.getElementById("fileName").textContent = fileName;
+        });
+    </script>
+</body>
+</html>
